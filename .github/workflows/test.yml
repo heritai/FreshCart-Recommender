@@ -1,0 +1,72 @@
+name: Test FreshCart Application
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Test data loading
+      run: |
+        python -c "
+        import sys
+        sys.path.append('utils')
+        from data_prep import DataProcessor
+        dp = DataProcessor()
+        dp.load_data()
+        print('Data loading test: PASSED')
+        "
+    
+    - name: Test recommendation engine
+      run: |
+        python -c "
+        import sys
+        sys.path.append('utils')
+        from data_prep import DataProcessor
+        from recommender import FreshCartRecommender
+        dp = DataProcessor()
+        dp.load_data()
+        rec = FreshCartRecommender(dp)
+        rec.fit()
+        print('Recommendation engine test: PASSED')
+        "
+    
+    - name: Test visualizations
+      run: |
+        python -c "
+        import sys
+        sys.path.append('utils')
+        from data_prep import DataProcessor
+        from visualizations import FreshCartVisualizer
+        dp = DataProcessor()
+        dp.load_data()
+        viz = FreshCartVisualizer(dp)
+        print('Visualization test: PASSED')
+        "
+    
+    - name: Test Streamlit app
+      run: |
+        python -c "
+        import streamlit as st
+        import sys
+        sys.path.append('utils')
+        from app import main
+        print('Streamlit app test: PASSED')
+        "
