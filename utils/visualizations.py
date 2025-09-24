@@ -143,6 +143,120 @@ class FreshCartVisualizer:
                     paper_bgcolor='rgba(0,0,0,0)'
                 )
                 return fig
+            
+            # Create network graph
+            G = nx.Graph()
+            
+            # Add nodes and edges with error handling
+            for _, row in frequently_bought_together.head(20).iterrows():
+                try:
+                    G.add_edge(row['Product1'], row['Product2'], weight=row['Cooccurrence'])
+                except Exception as e:
+                    continue  # Skip problematic edges
+            
+            # Check if graph has any nodes
+            if len(G.nodes()) == 0:
+                fig = go.Figure()
+                fig.add_annotation(
+                    text="No valid product relationships found",
+                    xref="paper", yref="paper",
+                    x=0.5, y=0.5, showarrow=False,
+                    font=dict(size=16)
+                )
+                fig.update_layout(
+                    height=400,
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    paper_bgcolor='rgba(0,0,0,0)'
+                )
+                return fig
+            
+            # Get positions using spring layout with error handling
+            try:
+                pos = nx.spring_layout(G, k=3, iterations=50)
+            except Exception:
+                # Fallback to circular layout if spring layout fails
+                pos = nx.circular_layout(G)
+            
+            # Create edge traces
+            edge_x = []
+            edge_y = []
+            
+            for edge in G.edges():
+                try:
+                    x0, y0 = pos[edge[0]]
+                    x1, y1 = pos[edge[1]]
+                    edge_x.extend([x0, x1, None])
+                    edge_y.extend([y0, y1, None])
+                except Exception:
+                    continue  # Skip problematic edges
+            
+            edge_trace = go.Scatter(
+                x=edge_x, y=edge_y,
+                line=dict(width=2, color='#888'),
+                hoverinfo='none',
+                mode='lines'
+            )
+            
+            # Create node traces
+            node_x = []
+            node_y = []
+            node_text = []
+            node_colors = []
+            
+            for node in G.nodes():
+                try:
+                    x, y = pos[node]
+                    node_x.append(x)
+                    node_y.append(y)
+                    node_text.append(node)
+                    
+                    # Color by category
+                    category = self.data_processor.product_categories.get(node, 'Unknown')
+                    node_colors.append(self.category_colors.get(category, '#CCCCCC'))
+                except Exception:
+                    continue  # Skip problematic nodes
+            
+            node_trace = go.Scatter(
+                x=node_x, y=node_y,
+                mode='markers+text',
+                hoverinfo='text',
+                text=node_text,
+                textposition="middle center",
+                textfont=dict(size=10, family="Arial Black"),
+                marker=dict(
+                    size=20,
+                    color=node_colors,
+                    line=dict(width=2, color='white')
+                )
+            )
+            
+            # Create figure with data
+            fig = go.Figure(data=[edge_trace, node_trace])
+            
+            # Update layout separately to avoid compatibility issues
+            fig.update_layout(
+                title=f'Product Network Graph (Min Co-occurrence: {min_cooccurrence})',
+                titlefont_size=16,
+                showlegend=False,
+                hovermode='closest',
+                margin=dict(b=20,l=5,r=5,t=40),
+                annotations=[ dict(
+                    text="Products frequently bought together",
+                    showarrow=False,
+                    xref="paper", yref="paper",
+                    x=0.005, y=-0.002,
+                    xanchor='left', yanchor='bottom',
+                    font=dict(size=12)
+                )],
+                xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                plot_bgcolor='rgba(0,0,0,0)',
+                paper_bgcolor='rgba(0,0,0,0)',
+                height=500
+            )
+            
+            return fig
+            
         except Exception as e:
             # Create error graph if something goes wrong
             fig = go.Figure()
@@ -158,92 +272,6 @@ class FreshCartVisualizer:
                 paper_bgcolor='rgba(0,0,0,0)'
             )
             return fig
-        
-        # Create network graph
-        G = nx.Graph()
-        
-        # Add nodes and edges
-        for _, row in frequently_bought_together.head(20).iterrows():
-            G.add_edge(row['Product1'], row['Product2'], weight=row['Cooccurrence'])
-        
-        # Get positions using spring layout
-        pos = nx.spring_layout(G, k=3, iterations=50)
-        
-        # Create edge traces
-        edge_x = []
-        edge_y = []
-        edge_info = []
-        
-        for edge in G.edges():
-            x0, y0 = pos[edge[0]]
-            x1, y1 = pos[edge[1]]
-            edge_x.extend([x0, x1, None])
-            edge_y.extend([y0, y1, None])
-            edge_info.append(f"{edge[0]} ↔ {edge[1]}<br>Co-occurrences: {G[edge[0]][edge[1]]['weight']}")
-        
-        edge_trace = go.Scatter(
-            x=edge_x, y=edge_y,
-            line=dict(width=2, color='#888'),
-            hoverinfo='none',
-            mode='lines'
-        )
-        
-        # Create node traces
-        node_x = []
-        node_y = []
-        node_text = []
-        node_colors = []
-        
-        for node in G.nodes():
-            x, y = pos[node]
-            node_x.append(x)
-            node_y.append(y)
-            node_text.append(node)
-            
-            # Color by category
-            category = self.data_processor.product_categories.get(node, 'Unknown')
-            node_colors.append(self.category_colors.get(category, '#CCCCCC'))
-        
-        node_trace = go.Scatter(
-            x=node_x, y=node_y,
-            mode='markers+text',
-            hoverinfo='text',
-            text=node_text,
-            textposition="middle center",
-            textfont=dict(size=10, family="Arial Black"),
-            marker=dict(
-                size=20,
-                color=node_colors,
-                line=dict(width=2, color='white')
-            )
-        )
-        
-        # Create figure with data
-        fig = go.Figure(data=[edge_trace, node_trace])
-        
-        # Update layout separately to avoid compatibility issues
-        fig.update_layout(
-            title=f'Product Network Graph (Min Co-occurrence: {min_cooccurrence})',
-            titlefont_size=16,
-            showlegend=False,
-            hovermode='closest',
-            margin=dict(b=20,l=5,r=5,t=40),
-            annotations=[ dict(
-                text="Products frequently bought together",
-                showarrow=False,
-                xref="paper", yref="paper",
-                x=0.005, y=-0.002,
-                xanchor='left', yanchor='bottom',
-                font=dict(size=12)
-            )],
-            xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-            yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-            plot_bgcolor='rgba(0,0,0,0)',
-            paper_bgcolor='rgba(0,0,0,0)',
-            height=500
-        )
-        
-        return fig
     
     def create_basket_size_distribution(self):
         """Create histogram of basket sizes"""

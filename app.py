@@ -249,30 +249,57 @@ def main():
         # Additional charts
         st.plotly_chart(visualizer.create_basket_size_distribution(), use_container_width=True)
         
-        # Network graph
+        # Network graph with improved error handling
         try:
-            st.plotly_chart(visualizer.create_network_graph(15), use_container_width=True)
-        except Exception as e:
-            st.warning("Network graph temporarily unavailable. Showing alternative visualization.")
-            # Show a simple bar chart of frequently bought together products instead
-            frequently_bought = data_processor.get_frequently_bought_together(10)
-            if not frequently_bought.empty:
-                fig = px.bar(
-                    frequently_bought.head(10),
-                    x='Cooccurrence',
-                    y='Product1',
-                    orientation='h',
-                    title='Frequently Bought Together Products',
-                    labels={'Cooccurrence': 'Times Bought Together', 'Product1': 'Product'}
-                )
-                fig.update_layout(
-                    height=400,
-                    plot_bgcolor='rgba(0,0,0,0)',
-                    paper_bgcolor='rgba(0,0,0,0)'
-                )
-                st.plotly_chart(fig, use_container_width=True)
+            network_fig = visualizer.create_network_graph(15)
+            # Check if the figure has any data (not just error messages)
+            if network_fig.data and len(network_fig.data) > 0:
+                st.plotly_chart(network_fig, use_container_width=True)
             else:
-                st.info("No frequently bought together products found.")
+                st.warning("Network graph data not available. Showing alternative visualization.")
+                # Show a simple bar chart of frequently bought together products instead
+                frequently_bought = data_processor.get_frequently_bought_together(10)
+                if not frequently_bought.empty:
+                    fig = px.bar(
+                        frequently_bought.head(10),
+                        x='Cooccurrence',
+                        y='Product1',
+                        orientation='h',
+                        title='Frequently Bought Together Products',
+                        labels={'Cooccurrence': 'Times Bought Together', 'Product1': 'Product'}
+                    )
+                    fig.update_layout(
+                        height=400,
+                        plot_bgcolor='rgba(0,0,0,0)',
+                        paper_bgcolor='rgba(0,0,0,0)'
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.info("No frequently bought together products found.")
+        except Exception as e:
+            st.warning(f"Network graph temporarily unavailable: {str(e)[:100]}...")
+            # Show a simple bar chart of frequently bought together products instead
+            try:
+                frequently_bought = data_processor.get_frequently_bought_together(10)
+                if not frequently_bought.empty:
+                    fig = px.bar(
+                        frequently_bought.head(10),
+                        x='Cooccurrence',
+                        y='Product1',
+                        orientation='h',
+                        title='Frequently Bought Together Products',
+                        labels={'Cooccurrence': 'Times Bought Together', 'Product1': 'Product'}
+                    )
+                    fig.update_layout(
+                        height=400,
+                        plot_bgcolor='rgba(0,0,0,0)',
+                        paper_bgcolor='rgba(0,0,0,0)'
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.info("No frequently bought together products found.")
+            except Exception as e2:
+                st.error(f"Unable to create alternative visualization: {str(e2)[:100]}...")
         
         # Co-occurrence heatmap
         st.plotly_chart(visualizer.create_cooccurrence_heatmap(10), use_container_width=True)
