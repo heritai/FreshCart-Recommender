@@ -125,13 +125,29 @@ class FreshCartVisualizer:
     
     def create_network_graph(self, min_cooccurrence=20):
         """Create network graph of frequently bought together products"""
-        frequently_bought_together = self.data_processor.get_frequently_bought_together(min_cooccurrence)
-        
-        if frequently_bought_together.empty:
-            # Create empty graph if no data
+        try:
+            frequently_bought_together = self.data_processor.get_frequently_bought_together(min_cooccurrence)
+            
+            if frequently_bought_together.empty:
+                # Create empty graph if no data
+                fig = go.Figure()
+                fig.add_annotation(
+                    text="No products meet the co-occurrence threshold",
+                    xref="paper", yref="paper",
+                    x=0.5, y=0.5, showarrow=False,
+                    font=dict(size=16)
+                )
+                fig.update_layout(
+                    height=400,
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    paper_bgcolor='rgba(0,0,0,0)'
+                )
+                return fig
+        except Exception as e:
+            # Create error graph if something goes wrong
             fig = go.Figure()
             fig.add_annotation(
-                text="No products meet the co-occurrence threshold",
+                text=f"Error creating network graph: {str(e)[:50]}...",
                 xref="paper", yref="paper",
                 x=0.5, y=0.5, showarrow=False,
                 font=dict(size=16)
@@ -202,27 +218,30 @@ class FreshCartVisualizer:
             )
         )
         
-        fig = go.Figure(data=[edge_trace, node_trace],
-                       layout=go.Layout(
-                           title=f'Product Network Graph (Min Co-occurrence: {min_cooccurrence})',
-                           titlefont_size=16,
-                           showlegend=False,
-                           hovermode='closest',
-                           margin=dict(b=20,l=5,r=5,t=40),
-                           annotations=[ dict(
-                               text="Products frequently bought together",
-                               showarrow=False,
-                               xref="paper", yref="paper",
-                               x=0.005, y=-0.002,
-                               xanchor='left', yanchor='bottom',
-                               font=dict(size=12)
-                           )],
-                           xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-                           yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-                           plot_bgcolor='rgba(0,0,0,0)',
-                           paper_bgcolor='rgba(0,0,0,0)',
-                           height=500
-                       ))
+        # Create figure with data
+        fig = go.Figure(data=[edge_trace, node_trace])
+        
+        # Update layout separately to avoid compatibility issues
+        fig.update_layout(
+            title=f'Product Network Graph (Min Co-occurrence: {min_cooccurrence})',
+            titlefont_size=16,
+            showlegend=False,
+            hovermode='closest',
+            margin=dict(b=20,l=5,r=5,t=40),
+            annotations=[ dict(
+                text="Products frequently bought together",
+                showarrow=False,
+                xref="paper", yref="paper",
+                x=0.005, y=-0.002,
+                xanchor='left', yanchor='bottom',
+                font=dict(size=12)
+            )],
+            xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+            yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            height=500
+        )
         
         return fig
     
