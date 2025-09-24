@@ -12,8 +12,11 @@ import os
 # Add utils to path
 sys.path.append(os.path.join(os.path.dirname(__file__), 'utils'))
 
-# Import and run the main application
-from app import main
-
-if __name__ == "__main__":
+try:
+    # Import and run the main application
+    from app import main
     main()
+except Exception as e:
+    st.error(f"Error loading application: {str(e)}")
+    st.error("Please check the logs for more details.")
+    st.stop()

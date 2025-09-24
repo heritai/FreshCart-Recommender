@@ -18,9 +18,14 @@ import os
 # Add utils to path
 sys.path.append(os.path.join(os.path.dirname(__file__), 'utils'))
 
-from data_prep import DataProcessor
-from recommender import FreshCartRecommender
-from visualizations import FreshCartVisualizer
+try:
+    from data_prep import DataProcessor
+    from recommender import FreshCartRecommender
+    from visualizations import FreshCartVisualizer
+except ImportError as e:
+    st.error(f"Import error: {str(e)}")
+    st.error("Please ensure all required files are present in the utils directory.")
+    st.stop()
 
 # Page configuration
 st.set_page_config(
