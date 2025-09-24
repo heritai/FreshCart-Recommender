@@ -130,51 +130,34 @@ class FreshCartRecommender:
         return recommendations
     
     def _get_hybrid_recommendations(self, product, n_recommendations):
-        """Get hybrid recommendations combining similarity and co-occurrence"""
-        # Get similarity-based recommendations (limit to top candidates)
-        sim_recs = self._get_similarity_recommendations(product, min(n_recommendations * 3, 15))
-        # Get co-occurrence-based recommendations (limit to top candidates)
-        co_recs = self._get_cooccurrence_recommendations(product, min(n_recommendations * 3, 15))
+        """Get hybrid recommendations combining similarity and co-occurrence - optimized version"""
+        # Use only co-occurrence for faster performance in deployment
+        co_recs = self._get_cooccurrence_recommendations(product, n_recommendations * 2)
         
-        # Combine and score more efficiently
-        sim_scores = {rec['product']: rec['score'] for rec in sim_recs}
-        co_scores = {rec['product']: rec['score'] for rec in co_recs}
+        # If we have enough co-occurrence recommendations, use them
+        if len(co_recs) >= n_recommendations:
+            return co_recs[:n_recommendations]
         
-        # Get all unique products
-        all_products = set(sim_scores.keys()) | set(co_scores.keys())
+        # Otherwise, get some similarity recommendations to fill the gap
+        sim_recs = self._get_similarity_recommendations(product, n_recommendations)
         
-        # Normalize scores once
-        max_sim = max(sim_scores.values()) if sim_scores else 1
-        max_co = max(co_scores.values()) if co_scores else 1
+        # Combine and deduplicate
+        all_recs = {}
+        for rec in co_recs + sim_recs:
+            if rec['product'] not in all_recs:
+                all_recs[rec['product']] = rec
         
-        hybrid_scores = {}
-        for product_name in all_products:
-            sim_score = sim_scores.get(product_name, 0)
-            co_score = co_scores.get(product_name, 0)
-            
-            # Normalize and combine (weighted average)
-            normalized_sim = sim_score / max_sim if max_sim > 0 else 0
-            normalized_co = co_score / max_co if max_co > 0 else 0
-            
-            # Weighted combination (60% similarity, 40% co-occurrence)
-            hybrid_score = 0.6 * normalized_sim + 0.4 * normalized_co
-            hybrid_scores[product_name] = hybrid_score
+        # Return top recommendations
+        recommendations = list(all_recs.values())[:n_recommendations]
         
-        # Sort by hybrid score and return top N
-        sorted_products = sorted(hybrid_scores.items(), key=lambda x: x[1], reverse=True)
-        
-        recommendations = []
-        for product_name, score in sorted_products[:n_recommendations]:
-            recommendations.append({
-                'product': product_name,
-                'score': score,
-                'method': 'hybrid'
-            })
+        # Update method to hybrid
+        for rec in recommendations:
+            rec['method'] = 'hybrid'
         
         return recommendations
     
     def get_customer_recommendations(self, customer_id, n_recommendations=5):
-        """Get recommendations for a specific customer using collaborative filtering"""
+        """Get recommendations for a specific customer using collaborative filtering - optimized"""
         if customer_id not in self.customer_product_matrix.index:
             return []
         
@@ -183,15 +166,15 @@ class FreshCartRecommender:
             self.customer_product_matrix.loc[customer_id] == 1
         ].index)
         
-        # Find similar customers (limit to top 15 for performance)
+        # Use only top 5 similar customers for faster performance
         customer_similarities = self.customer_similarity_matrix[customer_id].sort_values(ascending=False)
-        customer_similarities = customer_similarities.drop(customer_id).head(15)
+        customer_similarities = customer_similarities.drop(customer_id).head(5)
         
         # Get products from similar customers more efficiently
         product_scores = {}
         for similar_customer, similarity in customer_similarities.items():
-            # Only consider customers with reasonable similarity
-            if similarity < 0.1:  # Skip very dissimilar customers
+            # Skip very dissimilar customers
+            if similarity < 0.2:
                 continue
                 
             similar_products = set(self.customer_product_matrix.loc[similar_customer][
@@ -204,6 +187,10 @@ class FreshCartRecommender:
                     if product not in product_scores:
                         product_scores[product] = 0
                     product_scores[product] += similarity
+        
+        # If no collaborative recommendations, fall back to popular products
+        if not product_scores:
+            return self.get_popular_products(n_recommendations)
         
         # Sort and return top recommendations
         sorted_products = sorted(product_scores.items(), key=lambda x: x[1], reverse=True)
@@ -219,25 +206,32 @@ class FreshCartRecommender:
         return recommendations
     
     def get_basket_recommendations(self, basket_products, n_recommendations=5):
-        """Get recommendations for a basket of products"""
+        """Get recommendations for a basket of products - optimized version"""
         if not basket_products:
             return []
         
-        # Limit basket size for performance (max 5 products)
-        basket_products = basket_products[:5]
+        # Limit basket size for performance (max 3 products)
+        basket_products = basket_products[:3]
         
         # Get recommendations for each product in basket
         all_recommendations = {}
         
         for product in basket_products:
-            if product in self.product_similarity_matrix.index:
-                # Use co-occurrence for faster basket recommendations
-                recs = self.get_product_recommendations(product, min(n_recommendations * 2, 10), method='cooccurrence')
-                for rec in recs:
-                    if rec['product'] not in basket_products:  # Don't recommend products already in basket
-                        if rec['product'] not in all_recommendations:
-                            all_recommendations[rec['product']] = 0
-                        all_recommendations[rec['product']] += rec['score']
+            if product in self.product_cooccurrence_matrix.index:
+                # Use direct co-occurrence lookup for faster performance
+                cooccurrences = self.product_cooccurrence_matrix[product].sort_values(ascending=False)
+                cooccurrences = cooccurrences.drop(product)  # Remove self
+                
+                # Add top co-occurring products
+                for co_product, score in cooccurrences.head(5).items():
+                    if co_product not in basket_products:  # Don't recommend products already in basket
+                        if co_product not in all_recommendations:
+                            all_recommendations[co_product] = 0
+                        all_recommendations[co_product] += score
+        
+        # If no recommendations found, return popular products
+        if not all_recommendations:
+            return self.get_popular_products(n_recommendations)
         
         # Sort by combined score
         sorted_products = sorted(all_recommendations.items(), key=lambda x: x[1], reverse=True)
