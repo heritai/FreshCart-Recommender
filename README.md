@@ -9,9 +9,9 @@ Boost sales and enhance customer satisfaction with FreshCart's intelligent produ
 FreshCart, a leading supermarket chain, aims to significantly enhance customer experience and boost revenue through intelligent product recommendations.
 
 **Challenges:**
-*   Customers often purchase a limited number of items per visit, leading to missed cross-sell opportunities.
+*   Customers frequently purchase a limited number of items per visit, missing cross-sell opportunities.
 *   Inefficient manual product placement and promotion strategies.
-*   Lack of personalized shopping experiences resulting in lower customer satisfaction.
+*   Lack of personalized shopping experiences, leading to lower customer satisfaction.
 
 **Solution:**
 FreshCart's AI-powered recommendation engine analyzes customer behavior and product relationships to suggest complementary items. This approach effectively increases basket size, boosts revenue, and significantly enhances customer satisfaction.
@@ -204,7 +204,7 @@ For production deployment, consider:
 
 ## 📊 Dataset Statistics
 
-Summary of the Synthetic Dataset Statistics:
+Summary of the Synthetic Dataset:
 
 *   **Total Transactions**: 90,816
 *   **Unique Customers**: 594
