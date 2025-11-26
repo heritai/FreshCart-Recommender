@@ -1,38 +1,38 @@
 # 🛒 FreshCart: An AI-Powered Product Recommendation System
 
-Boost sales and enhance customer satisfaction with FreshCart's intelligent product recommendation system.
+Boost sales and elevate customer satisfaction with FreshCart's intelligent product recommendation system.
 
 ---
 
 ## 🏢 Business Context
 
-FreshCart, a leading supermarket chain, aims to significantly enhance customer experience and boost revenue through intelligent product recommendations.
+FreshCart, a prominent supermarket chain, seeks to elevate customer experience and drive revenue growth through intelligent product recommendations.
 
 **Challenges:**
-*   Customers frequently purchase a limited number of items per visit, missing cross-sell opportunities.
+*   Customers often purchase a limited number of items, leading to missed cross-sell opportunities.
 *   Inefficient manual product placement and promotion strategies.
-*   Lack of personalized shopping experiences, leading to lower customer satisfaction.
+*   Lack of personalized shopping experiences, resulting in lower customer satisfaction.
 
 **Solution:**
-FreshCart's AI-powered recommendation engine analyzes customer behavior and product relationships to suggest complementary items. This approach effectively increases basket size, boosts revenue, and significantly enhances customer satisfaction.
+FreshCart's AI-powered recommendation engine analyzes customer behavior and product relationships to suggest complementary items. This approach effectively increases average basket size, boosts revenue, and significantly enhances customer satisfaction.
 
 ---
 
 ## 🚀 Key Dashboard Features
 
 ### 📊 Global Insights
-*   **Key Performance Indicators**: Displays total transactions, customer base, product catalog size, and average basket size.
-*   **Top Products Analysis**: Bar charts showcasing best-selling products by category.
+*   **Key Performance Indicators (KPIs)**: Snapshot of total transactions, customer base, product catalog size, and average basket size.
+*   **Top Products Analysis**: Bar charts illustrating best-selling products by category.
 *   **Category Distribution**: Pie charts and performance metrics for product categories.
-*   **Basket Size Analysis**: Analyzes distribution patterns and shopping behavior trends.
-*   **Co-occurrence Heatmaps**: Visual representation of frequently co-purchased products.
-*   **Network Graphs**: Interactive product relationship networks.
+*   **Basket Size Analysis**: Distribution patterns and shopping behavior trends.
+*   **Co-occurrence Heatmaps**: Visualizing frequently co-purchased products.
+*   **Network Graphs**: Interactive visualizations of product relationship networks.
 *   **Monthly Trends**: Time-series analysis of sales patterns.
 *   **Category Performance**: Comparative analysis across product categories.
 
 ### 🔍 Recommendation Explorer
 *   **Product-Based Recommendations**: Select any product to discover similar or complementary items.
-*   **Multiple Algorithms**: Choose from hybrid, similarity-based, or co-occurrence-based recommendation strategies.
+*   **Multiple Algorithms**: Options for hybrid, similarity-based, or co-occurrence-based strategies.
 *   **Customer-Based Recommendations**: Personalized suggestions derived from individual purchase history.
 *   **Purchase History Viewer**: Detailed transaction history for any customer.
 *   **Interactive Visualizations**: Dynamic charts illustrating recommendation scores and methodologies.
@@ -95,18 +95,18 @@ Explore the full recommendation system with interactive features and real-time i
 
 ## ⚠️ Disclaimer
 
-This demonstration utilizes a **synthetic dataset**, carefully designed to mimic realistic shopping behavior patterns and provide a robust testing environment.
+This demonstration utilizes a **synthetic dataset**, meticulously designed to mimic realistic shopping behavior patterns and provide a robust testing environment.
 
 Key characteristics of this synthetic data include:
 
 *   594 unique customers with varying shopping frequencies
-*   20 products across 5 categories (Groceries & Pantry, Beverages, Fresh Produce, Meat & Dairy, Household)
+*   20 distinct products across 5 categories (Groceries & Pantry, Beverages, Fresh Produce, Meat & Dairy, Household)
 *   90,816 transactions over a 1-year period
 *   Realistic co-purchase patterns (e.g., Pasta ↔ Tomato Sauce ↔ Parmesan)
 *   Cross-category relationships (e.g., Wine ↔ Pasta, Coffee ↔ Cereal)
 *   Seasonal and behavioral variations
 
-For demonstration purposes, certain aspects of the methods are simplified. A production-ready implementation would incorporate advanced features, such as:
+For demonstration purposes, certain methods are simplified. A production-ready implementation would incorporate advanced features such as:
 *   Robust real-time data processing
 *   A/B testing frameworks
 *   Advanced machine learning and deep learning models
@@ -129,36 +129,43 @@ For demonstration purposes, certain aspects of the methods are simplified. A pro
     cd freshcart-recommender
     ```
 
-2.  **Install dependencies**
+2.  **(Optional) Create and activate a virtual environment**
+    ```bash
+    python -m venv venv
+    # On macOS/Linux:
+    source venv/bin/activate
+    # On Windows:
+    venv\Scripts\activate
+    ```
+
+3.  **Install dependencies**
     ```bash
     pip install -r requirements.txt
     ```
 
-3.  **Run the application**
+4.  **Run the application**
     ```bash
     streamlit run app.py
     ```
 
-4.  **Access the dashboard**
+5.  **Access the dashboard**
     Open your browser to `http://localhost:8501`
 
 ### Project Structure
 
-The project is organized as follows:
-
 ```
-freshcart-recommender/
-├── app.py                    # Main Streamlit application
-├── requirements.txt          # Python dependencies
-├── README.md                 # This file
-├── utils/                    # Core utilities
-│   ├── data_prep.py          # Data processing and analysis
-│   ├── recommender.py        # Recommendation algorithms
-│   └── visualizations.py     # Chart and graph generation
-├── sample_data/              # Synthetic transaction data
-│   └── transactions.csv      # Main dataset (90K+ transactions)
-└── reports/                  # Documentation and examples
-    └── example_report.pdf    # Sample business report
+freshcart-recommender/            # Root directory
+├── app.py                        # Main Streamlit application
+├── requirements.txt              # Python dependencies
+├── README.md                     # This file
+├── utils/                        # Core utilities
+│   ├── data_prep.py              # Data processing and analysis
+│   ├── recommender.py            # Recommendation algorithms
+│   └── visualizations.py         # Chart and graph generation
+├── sample_data/                  # Synthetic transaction data
+│   └── transactions.csv          # Main dataset (90K+ transactions)
+└── reports/                      # Documentation and examples
+    └── example_report.pdf        # Sample business report
 ```
 
 ### Key Components
